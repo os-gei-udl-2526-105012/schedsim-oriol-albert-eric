@@ -160,6 +160,7 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
         }
     }
 
+    qsort(procTable,nprocs,sizeof(Process),compareArrival);
     printf("== PROCESSES ==\n");
     for (int p = 0; p < nprocs; p++) {
         printProcess(procTable[p]);
