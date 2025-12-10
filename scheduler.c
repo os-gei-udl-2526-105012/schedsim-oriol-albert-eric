@@ -57,21 +57,11 @@ size_t getTotalCPU(Process *procTable, size_t nprocs){
     return total;
 }
 
-int getCurrentBurst(Process* proc, int current_time){
-    int burst = 0;
-    for(int t=0; t<current_time; t++){
-        if(proc->lifecycle[t] == Running){
-            burst++;
-        }
-    }
-    return burst;
-}
-
 bool isBetter(Process *process1, Process *process2, int algorithm, int t) {
     if (algorithm == SJF) {
-        return (process1->burst - getCurrentBurst(process1, t)) < (process2->burst - getCurrentBurst(process2, t));
+        return compareBurst(process1, process2) < 0;
     } else if (algorithm == PRIORITIES) {
-        return process1->priority < process2->priority;
+        return comparePriority(process1, process2) < 0;
     }
     return false;
 }
@@ -106,7 +96,7 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
             }
         }
         
-        if (current != NULL && getCurrentBurst(current, t) >= current->burst) {
+        if (current != NULL && current->burst <= 0) {
             current->completed = true;
             current->return_time = t - current->arrive_time;
             current->lifecycle[t] = Finished;
@@ -158,6 +148,7 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
         
         if (current != NULL) {
             current->lifecycle[t] = Running;
+            current->burst--;
             quantum_counter++;
 
             if (current->response_time == -1) {
@@ -176,7 +167,7 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
     }
 
     qsort(procTable,nprocs,sizeof(Process),compareArrival);
-    printf("== PROCESSES ==\n\n");
+    printf("== PROCESSES ==\n");
     for (int p = 0; p < nprocs; p++) {
         printProcess(procTable[p]);
         printf(" - waiting_time=%d\n", procTable[p].waiting_time);
@@ -184,7 +175,6 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
         printf(" - response_time=%d\n", procTable[p].response_time);
         printf("\n");
     }
-    printf("\n");
 
     printSimulation(nprocs,procTable,duration);
     printf("\n");
