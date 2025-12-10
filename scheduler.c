@@ -69,9 +69,9 @@ int getCurrentBurst(Process* proc, int current_time){
 
 bool isBetter(Process *process1, Process *process2, int algorithm, int t) {
     if (algorithm == SJF) {
-        return (process1->burst - getCurrentBurst(process1, t)) < (process2->burst - getCurrentBurst(process2, t));
+        return compareBurst(process1, process2) < 0;
     } else if (algorithm == PRIORITIES) {
-        return process1->priority < process2->priority;
+        return comparePriority(process1, process2) < 0;
     }
     return false;
 }
@@ -91,12 +91,13 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
             procTable[p].lifecycle[t]=-1;
         }
         procTable[p].waiting_time = 0;
-        procTable[p].return_time = 0;
-        procTable[p].response_time = 0;
+        procTable[p].return_time = -1;
+        procTable[p].response_time = -1;
         procTable[p].completed = false;
     }
 
     Process* current = NULL;
+    int quantum_counter = 0;
     
     for (int t = 0; t < duration; t++) {
         for (int p = 0; p < nprocs; p++) {
@@ -105,11 +106,12 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
             }
         }
         
-        if (current != NULL && getCurrentBurst(current, t) >= current->burst) {
+        if (current != NULL && current->burst <= 0) {
             current->completed = true;
             current->return_time = t - current->arrive_time;
             current->lifecycle[t] = Finished;
             current = NULL;
+            quantum_counter = 0;
         }
         
         if (get_queue_size() > 0) {
@@ -124,30 +126,44 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
                 setQueueFromList(_proclist);
                 free(_proclist);
             }
+            // FCFS i RR no necessita reordernar
 
             if (modality == PREEMPTIVE) {
                 if (current == NULL) {
                     current = dequeue();
+                    quantum_counter=0;
                 } else {
                     Process *best = peek(); // Mira el següent a sortir (funció creada per nosaltres)
-                    if (isBetter(best, current, algorithm, t)) {
-                        enqueue(current);
-                        current = dequeue();
-                    }
+                    switch(algorithm){
+                        case RR:
+                            if (quantum_counter >= quantum) {
+                                enqueue(current);
+                                current = dequeue();
+                                quantum_counter=0;
+                            }
+                            break;
+                        default:
+                            if (isBetter(best, current, algorithm, t)) {
+                                enqueue(current);
+                                current = dequeue();
+                            }
+                    }   
                 }
             } else if (modality == NONPREEMPTIVE) {
                 if (current == NULL) {
                     current = dequeue();
                 }
             }
-            
-            if (getCurrentBurst(current, t) == 0) {
-                current->response_time = t - current->arrive_time;
-            }
         }
         
         if (current != NULL) {
             current->lifecycle[t] = Running;
+            current->burst--;
+            quantum_counter++;
+
+            if (current->response_time == -1) {
+                current->response_time = t - current->arrive_time;
+            }
         }
         
         if (get_queue_size() > 0) {
@@ -164,8 +180,11 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
     printf("== PROCESSES ==\n");
     for (int p = 0; p < nprocs; p++) {
         printProcess(procTable[p]);
+        printf(" - waiting_time=%d\n", procTable[p].waiting_time);
+        printf(" - return_time=%d\n", procTable[p].return_time);
+        printf(" - response_time=%d\n", procTable[p].response_time);
+        printf("\n");
     }
-    printf("\n");
 
     printSimulation(nprocs,procTable,duration);
     printf("\n");
