@@ -96,6 +96,12 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
         procTable[p].completed = false;
     }
 
+    printf("== PROCESSES ==\n");
+    for (int p = 0; p < nprocs; p++) {
+        printProcess(procTable[p]);
+    }
+    printf("\n");
+
     Process* current = NULL;
     int quantum_counter = 0;
     
@@ -177,14 +183,6 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
     }
 
     qsort(procTable,nprocs,sizeof(Process),compareArrival);
-    printf("== PROCESSES ==\n");
-    for (int p = 0; p < nprocs; p++) {
-        printProcess(procTable[p]);
-        printf(" - waiting_time=%d\n", procTable[p].waiting_time);
-        printf(" - return_time=%d\n", procTable[p].return_time);
-        printf(" - response_time=%d\n", procTable[p].response_time);
-        printf("\n");
-    }
 
     printSimulation(nprocs,procTable,duration);
     printf("\n");
