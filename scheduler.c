@@ -176,6 +176,7 @@ int run_dispatcher(Process *procTable, size_t nprocs, int algorithm, int modalit
             _proclist = transformQueueToList();
             for (int i = 0; i < get_queue_size(); i++) {
                 _proclist[i].waiting_time++;
+                _proclist[i].lifecycle[t] = Ready;
             }
             setQueueFromList(_proclist);
             free(_proclist);
@@ -217,7 +218,7 @@ void printSimulation(size_t nprocs, Process *procTable, size_t duration){
             printf ("|%4s", current.name);
             for(int t=0; t<duration; t++){
                 printf("|%2s",  (current.lifecycle[t]==Running ? "E" : 
-                        current.lifecycle[t]==Bloqued ? "B" :   
+                        current.lifecycle[t]==Ready ? "R" :   
                         current.lifecycle[t]==Finished ? "F" : " "));
             }
             printf ("|\n");
