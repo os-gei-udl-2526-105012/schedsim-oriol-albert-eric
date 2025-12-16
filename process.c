@@ -10,6 +10,7 @@ Process initProcess(int id, char* name, int burst, int priority, int arrive_time
     p.id = id;
     p.name=strdup(name);
     p.burst=burst;
+    p.initial_burst=burst;
     p.priority=priority;
     p.arrive_time=arrive_time;
     return p;
@@ -43,6 +44,7 @@ Process initProcessFromTokens(char* line, char* separator){
                 break;
             case 4:
                 p.burst=atoi(feature);
+                p.initial_burst=p.burst;
             }
             feature=strtok(NULL, ";"); 
             features++;

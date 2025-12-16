@@ -18,6 +18,7 @@ typedef struct _process
     int id;
     char* name;
     int burst; // [[2,Running],[],[burst,operation]] 
+    int initial_burst;
     int priority;
     int arrive_time;           
     // Information obtained during and after the life of the process

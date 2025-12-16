@@ -52,7 +52,7 @@ size_t initFromCSVFile(char* filename, Process** procTable){
 size_t getTotalCPU(Process *procTable, size_t nprocs){
     size_t total=0;
     for (int p=0; p<nprocs; p++ ){
-        total += (size_t) procTable[p].burst;
+        total += (size_t) procTable[p].initial_burst;
     }
     return total;
 }
@@ -255,7 +255,7 @@ void printMetrics(size_t simulationCPUTime, size_t nprocs, Process *procTable ){
             averageWaitingTime += procTable[p].waiting_time;
             averageResponseTime += procTable[p].response_time;
             averageReturnTime += procTable[p].return_time;
-            averageReturnTimeN += procTable[p].return_time / (double) procTable[p].burst;
+            averageReturnTimeN += procTable[p].return_time / (double) procTable[p].initial_burst;
     }
 
 
